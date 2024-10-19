@@ -36,7 +36,7 @@ pub enum WordPiece {
     /// A sequence of pieces that are embedded in double quotes.
     DoubleQuotedSequence(Vec<WordPieceWithSource>),
     /// A tilde prefix.
-    TildePrefix(String),
+    TildePrefix(TildeOption),
     /// A parameter expansion.
     ParameterExpansion(ParameterExpr),
     /// A command substitution.
@@ -47,6 +47,23 @@ pub enum WordPiece {
     EscapeSequence(String),
     /// An arithmetic expression.
     ArithmeticExpression(ast::UnexpandedArithmeticExpr),
+}
+
+/// Represents a kind of tilde option (e.g., ~).
+#[derive(Clone, Debug)]
+pub enum TildeOption {
+    /// ~
+    Home,
+    /// ~<user>
+    UserHome(String),
+    /// ~+
+    WorkingDir,
+    /// ~-
+    OldWorkingDir,
+    /// ~N or ~+N
+    NthDirInDirStack(usize, bool),
+    /// ~-N
+    NthDirFromEndOfDirStack(usize),
 }
 
 /// Type of a parameter test.
@@ -523,7 +540,18 @@ peg::parser! {
 
         // TODO: Handle colon syntax
         rule tilde_prefix() -> WordPiece =
-            tilde_parsing_enabled() "~" cs:$((!['/' | ':' | ';'] [c])*) { WordPiece::TildePrefix(cs.to_owned()) }
+            tilde_parsing_enabled() "~" to:tilde_option() { WordPiece::TildePrefix(to) }
+
+        rule tilde_option() -> TildeOption =
+            &tilde_terminator() { TildeOption::Home } /
+            "+" &tilde_terminator() { TildeOption::WorkingDir } /
+            plus:("+"?) n:$(['0'..='9']*) &tilde_terminator() { TildeOption::NthDirInDirStack(n.parse().unwrap(), plus.is_some()) } /
+            "-" &tilde_terminator() { TildeOption::OldWorkingDir } /
+            "-" n:$(['0'..='9']*) &tilde_terminator() { TildeOption::NthDirFromEndOfDirStack(n.parse().unwrap()) } /
+            user:$((!tilde_terminator() [_])*) { TildeOption::UserHome(user.to_owned()) }
+
+        rule tilde_terminator() =
+            ['/' | ':' | ';'] / ![_]
 
         // TODO: Deal with fact that there may be a quoted word or escaped closing brace chars.
         // TODO: Improve on how we handle a '$' not followed by a valid variable name or parameter.

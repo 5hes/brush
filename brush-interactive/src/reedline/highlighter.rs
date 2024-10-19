@@ -29,7 +29,7 @@ mod styles {
     }
 
     pub fn operator() -> Style {
-        Style::new().fg(Color::White).italic()
+        Style::new().fg(Color::Cyan).italic()
     }
 
     pub fn assignment() -> Style {
