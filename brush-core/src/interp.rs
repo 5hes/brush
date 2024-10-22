@@ -1054,7 +1054,14 @@ async fn expand_assignment_value(
 ) -> Result<ast::AssignmentValue, error::Error> {
     let expanded = match value {
         ast::AssignmentValue::Scalar(s) => {
-            let expanded_word = expansion::basic_expand_word(shell, s).await?;
+            let mut parser_options = shell.parser_options();
+
+            // When expanding a scalar value on the right-hand side of an assignment, we
+            // need to expand tildes both at the beginning of the word and after colons.
+            parser_options.expand_tildes_after_colons = true;
+
+            let expanded_word =
+                expansion::basic_expand_word_with_options(shell, parser_options, s).await?;
             ast::AssignmentValue::Scalar(ast::Word {
                 value: expanded_word,
             })

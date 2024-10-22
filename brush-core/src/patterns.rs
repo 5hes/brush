@@ -522,11 +522,11 @@ mod tests {
     #[test]
     fn test_pattern_word_translation() -> Result<()> {
         assert_eq!(
-            pattern_to_exact_regex_str(&vec![PatternPiece::Pattern("a*".to_owned())])?.as_str(),
+            pattern_to_exact_regex_str(vec![PatternPiece::Pattern("a*".to_owned())])?.as_str(),
             "^a.*$"
         );
         assert_eq!(
-            pattern_to_exact_regex_str(&vec![
+            pattern_to_exact_regex_str(vec![
                 PatternPiece::Pattern("a*".to_owned()),
                 PatternPiece::Literal("b".to_owned()),
             ])?
@@ -534,7 +534,7 @@ mod tests {
             "^a.*b$"
         );
         assert_eq!(
-            pattern_to_exact_regex_str(&vec![
+            pattern_to_exact_regex_str(vec![
                 PatternPiece::Literal("a*".to_owned()),
                 PatternPiece::Pattern("b".to_owned()),
             ])?

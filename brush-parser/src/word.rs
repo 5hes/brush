@@ -433,6 +433,7 @@ peg::parser! {
                 if let Some(tilde) = tilde {
                     all_pieces.push(tilde);
                 }
+
                 all_pieces.extend(pieces);
                 all_pieces
             }
@@ -538,7 +539,6 @@ peg::parser! {
                 }
             }
 
-        // TODO: Handle colon syntax
         rule tilde_prefix() -> WordPiece =
             tilde_parsing_enabled() "~" to:tilde_option() { WordPiece::TildePrefix(to) }
 
@@ -548,10 +548,13 @@ peg::parser! {
             plus:("+"?) n:$(['0'..='9']*) &tilde_terminator() { TildeOption::NthDirInDirStack(n.parse().unwrap(), plus.is_some()) } /
             "-" &tilde_terminator() { TildeOption::OldWorkingDir } /
             "-" n:$(['0'..='9']*) &tilde_terminator() { TildeOption::NthDirFromEndOfDirStack(n.parse().unwrap()) } /
-            user:$((!tilde_terminator() [_])*) { TildeOption::UserHome(user.to_owned()) }
+            user:$(portable_filename_char()*) &tilde_terminator() { TildeOption::UserHome(user.to_owned()) }
 
         rule tilde_terminator() =
-            ['/' | ':' | ';'] / ![_]
+            ['/' | ':'] / ![_]
+
+        rule portable_filename_char() =
+            ['A'..='Z' | 'a'..='z' | '0'..='9' | '.' | '_' | '-']
 
         // TODO: Deal with fact that there may be a quoted word or escaped closing brace chars.
         // TODO: Improve on how we handle a '$' not followed by a valid variable name or parameter.
@@ -747,7 +750,7 @@ peg::parser! {
             &[_] {? if !parser_options.sh_mode { Ok(()) } else { Err("posix") } }
 
         rule tilde_parsing_enabled() -> () =
-            &[_] {? if parser_options.tilde_expansion { Ok(()) } else { Err("no tilde expansion") } }
+            &[_] {? if parser_options.expand_tildes_at_word_start { Ok(()) } else { Err("no tilde expansion") } }
     }
 }
 

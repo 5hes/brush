@@ -878,10 +878,29 @@ cases:
   - name: "Tilde expansion: after colons"
     stdin: |
       test_root=$(pwd)
-      HOME=$(test_root)
+      HOME=${test_root}
+
+      echo "something:~"
 
       D=something:~
       echo "D: ${D//${test_root}/TEST_ROOT}"
 
+      D=something":"~
+      echo "D: ${D//${test_root}/TEST_ROOT}"
+
+      D=something:"~"
+      echo "D: ${D//${test_root}/TEST_ROOT}"
+
       D=something:~:another:~
+      echo "D: ${D//${test_root}/TEST_ROOT}"
+
+  - name: "Tilde expansion: unexpanded tildes"
+    stdin: |
+      test_root=$(pwd)
+      HOME=${test_root}
+
+      D="~"
+      echo "D: ${D//${test_root}/TEST_ROOT}"
+
+      D=x~
       echo "D: ${D//${test_root}/TEST_ROOT}"

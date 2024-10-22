@@ -263,7 +263,8 @@ pub(crate) async fn basic_expand_pattern(
     shell: &mut Shell,
     word: &ast::Word,
 ) -> Result<patterns::Pattern, error::Error> {
-    let mut expander = WordExpander::new(shell);
+    let parser_options = shell.parser_options();
+    let mut expander = WordExpander::new(shell, parser_options);
     expander.basic_expand_pattern(&word.flatten()).await
 }
 
@@ -271,7 +272,8 @@ pub(crate) async fn basic_expand_regex(
     shell: &mut Shell,
     word: &ast::Word,
 ) -> Result<crate::regex::Regex, error::Error> {
-    let mut expander = WordExpander::new(shell);
+    let parser_options = shell.parser_options();
+    let mut expander = WordExpander::new(shell, parser_options);
     expander.basic_expand_regex(&word.flatten()).await
 }
 
@@ -282,8 +284,18 @@ pub(crate) async fn basic_expand_word(
     basic_expand_str(shell, word.flatten().as_str()).await
 }
 
+pub(crate) async fn basic_expand_word_with_options(
+    shell: &mut Shell,
+    parser_options: brush_parser::ParserOptions,
+    word: &ast::Word,
+) -> Result<String, error::Error> {
+    let mut expander = WordExpander::new(shell, parser_options);
+    expander.basic_expand_to_str(word.flatten().as_str()).await
+}
+
 pub(crate) async fn basic_expand_str(shell: &mut Shell, s: &str) -> Result<String, error::Error> {
-    let mut expander = WordExpander::new(shell);
+    let parser_options = shell.parser_options();
+    let mut expander = WordExpander::new(shell, parser_options);
     expander.basic_expand_to_str(s).await
 }
 
@@ -291,8 +303,10 @@ pub(crate) async fn basic_expand_str_without_tilde(
     shell: &mut Shell,
     s: &str,
 ) -> Result<String, error::Error> {
-    let mut expander = WordExpander::new(shell);
-    expander.parser_options.tilde_expansion = false;
+    let mut parser_options = shell.parser_options();
+    parser_options.expand_tildes_at_word_start = false;
+
+    let mut expander = WordExpander::new(shell, parser_options);
     expander.basic_expand_to_str(s).await
 }
 
@@ -307,7 +321,8 @@ pub(crate) async fn full_expand_and_split_str(
     shell: &mut Shell,
     s: &str,
 ) -> Result<Vec<String>, error::Error> {
-    let mut expander = WordExpander::new(shell);
+    let parser_options = shell.parser_options();
+    let mut expander = WordExpander::new(shell, parser_options);
     expander.full_expand_with_splitting(s).await
 }
 
@@ -317,7 +332,7 @@ pub(crate) async fn assign_to_named_parameter(
     value: String,
 ) -> Result<(), error::Error> {
     let parser_options = shell.parser_options();
-    let mut expander = WordExpander::new(shell);
+    let mut expander = WordExpander::new(shell, parser_options.clone());
     let parameter = brush_parser::word::parse_parameter(name, &parser_options)?;
     expander.assign_to_parameter(&parameter, value).await
 }
@@ -328,9 +343,7 @@ struct WordExpander<'a> {
 }
 
 impl<'a> WordExpander<'a> {
-    pub fn new(shell: &'a mut Shell) -> Self {
-        let parser_options = shell.parser_options();
-
+    pub fn new(shell: &'a mut Shell, parser_options: brush_parser::ParserOptions) -> Self {
         Self {
             shell,
             parser_options,
@@ -1658,7 +1671,8 @@ mod tests {
     async fn test_field_splitting() -> Result<()> {
         let options = crate::shell::CreateOptions::default();
         let mut shell = crate::shell::Shell::new(&options).await?;
-        let expander = WordExpander::new(&mut shell);
+        let parser_options = shell.parser_options();
+        let expander = WordExpander::new(&mut shell, parser_options);
 
         let expansion = Expansion {
             fields: vec![

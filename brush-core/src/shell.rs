@@ -755,7 +755,8 @@ impl Shell {
             enable_extended_globbing: self.options.extended_globbing,
             posix_mode: self.options.posix_mode,
             sh_mode: self.options.sh_mode,
-            tilde_expansion: true,
+            expand_tildes_at_word_start: true,
+            expand_tildes_after_colons: false,
         }
     }
 

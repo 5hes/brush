@@ -7,12 +7,17 @@ use crate::tokenizer::{Token, TokenEndReason, Tokenizer, TokenizerOptions, Token
 pub struct ParserOptions {
     /// Whether or not to enable extended globbing (a.k.a. `extglob`).
     pub enable_extended_globbing: bool,
-    /// Whether or not to enable POSIX complaince mode.
+    /// Whether or not to enable POSIX compliance mode.
     pub posix_mode: bool,
     /// Whether or not to enable maximal compatibility with the `sh` shell.
     pub sh_mode: bool,
-    /// Whether or not to perform tilde expansion.
-    pub tilde_expansion: bool,
+    /// Whether or not to perform tilde expansion at the beginning of a
+    /// word.
+    pub expand_tildes_at_word_start: bool,
+    /// Whether or not to perform tilde expansion immediately following an
+    /// unescaped, unquoted colon (':'). This is typically only done in
+    /// the right-hand side of an assignment.
+    pub expand_tildes_after_colons: bool,
 }
 
 impl Default for ParserOptions {
@@ -21,7 +26,8 @@ impl Default for ParserOptions {
             enable_extended_globbing: true,
             posix_mode: false,
             sh_mode: false,
-            tilde_expansion: true,
+            expand_tildes_at_word_start: true,
+            expand_tildes_after_colons: false,
         }
     }
 }
