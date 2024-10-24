@@ -429,13 +429,45 @@ peg::parser! {
 
         rule word<T>(stop_condition: rule<T>) -> Vec<WordPieceWithSource> =
             tilde:tilde_prefix_with_source()? pieces:word_piece_with_source(<stop_condition()>, false /*in_command*/)* {
-                let mut all_pieces = Vec::new();
-                if let Some(tilde) = tilde {
-                    all_pieces.push(tilde);
-                }
+                // If we have a tilde prefix, we need to insert it at the beginning of the pieces.
+                let pieces = if let Some(tilde) = tilde {
+                    let mut pieces = pieces;
+                    pieces.insert(0, tilde);
+                    pieces
+                } else {
+                    pieces
+                };
 
-                all_pieces.extend(pieces);
-                all_pieces
+                // If we've been asked to parse tilde expressions after colons, then go
+                // through all text pieces and look for colons.
+                if parser_options.expand_tildes_after_colons {
+                    let mut updated_pieces = vec![];
+                    for piece in pieces {
+                        if let WordPiece::Text(s) = &piece.piece {
+                            let mut offset = 0;
+                            for (i, colon_terminated_segment) in s.split_inclusive(':').enumerate() {
+                                if i > 0 {
+                                    let x = tilde_prefix_or_text(colon_terminated_segment);
+                                    // DBG:RRO
+                                }
+
+                                updated_pieces.push(WordPieceWithSource {
+                                    piece: WordPiece::Text(colon_terminated_segment.to_owned()),
+                                    start_index: piece.start_index + offset,
+                                    end_index: piece.start_index + offset + colon_terminated_segment.len(),
+                                });
+
+                                offset += colon_terminated_segment.len();
+                            }
+                        } else {
+                            updated_pieces.push(piece);
+                        }
+                    }
+
+                    updated_pieces
+                } else {
+                    pieces
+                }
             }
 
         // N.B. We don't bother returning the word pieces, as all users of this rule
@@ -538,6 +570,10 @@ peg::parser! {
                     end_index
                 }
             }
+
+        pub(crate) rule tilde_prefix_or_text() -> WordPiece =
+            tilde_prefix() /
+            s:$(([_])*) { WordPiece::Text(s.to_owned()) }
 
         rule tilde_prefix() -> WordPiece =
             tilde_parsing_enabled() "~" to:tilde_option() { WordPiece::TildePrefix(to) }
