@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main  # 在主分支上推送时触发
+  pull_request:
+    branches:
+      - main  # 在主分支的拉取请求时触发
+  workflow_dispatch:  # 允许手动触发工作流
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # 使用 Ubuntu 作为基础环境
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Add aarch64 musl target
+        run: rustup target add aarch64-unknown-linux-musl
+
+      - name: Build for aarch64 musl
+        run: cargo build --target aarch64-unknown-linux-musl --release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aarch64-musl-binary
+          path: target/aarch64-unknown-linux-musl/release/brush  # 替换为您的可执行文件名
+
+      - name: Run tests
+        run: cargo test --target aarch64-unknown-linux-musl --release
