@@ -26,7 +26,7 @@ jobs:
         # sudo apt-get install gcc-aarch64-linux-gnu
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
         # rustup target add aarch64-unknown-linux-gnu
-        rustup target add aarch64-unknown-linux-musl
+        rustup target add aarch64-unknown-linux-musl -y
         # sudo apt-get install gcc-aarch64-linux-gnu
 
     - name: Check info
