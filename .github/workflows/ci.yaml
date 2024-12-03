@@ -44,10 +44,10 @@ jobs:
             binary_name: "brush"
           # Build for aarch64/linux target on x86_64/linux host.
           - host: "ubuntu-latest"
-            target: "aarch64-unknown-linux-gnu"
+            target: "aarch64-unknown-linux-musl"
             os: "linux"
             arch: "aarch64"
-            required_tools: "gcc-aarch64-linux-gnu"
+            required_tools: "aarch64-unknown-linux-musl"
             binary_name: "brush"
           # Build for WASI-0.1 target on x86_64/linux host.
           - host: "ubuntu-latest"
