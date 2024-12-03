@@ -1,0 +1,62 @@
+name: Build
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Build binary for aarch64"
+        required: true
+        type: boolean
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out
+      uses: actions/checkout@v4
+
+    - name: Install Depends
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install musl-tools
+        # sudo apt-get install clang
+        # sudo apt-get install clang-tools
+        # sudo apt-get install lld
+        # sudo apt-get install gcc-aarch64-linux-gnu
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        # rustup target add aarch64-unknown-linux-gnu
+        rustup target add aarch64-unknown-linux-musl
+        # sudo apt-get install gcc-aarch64-linux-gnu
+
+    - name: Check info
+      shell: bash
+      run: |
+        ls -ltrah
+        ls -ltra
+        tree
+
+    - name: Build
+      shell: bash
+      run: |
+        cargo build --target aarch64-unknown-linux-musl --release
+
+    - name: Check info
+      shell: bash
+      run: |
+        ls -ltrah
+        ls -ltrah target/release/
+        tree
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        path: target/release/*
+
+
+
+
+
+
+
+
