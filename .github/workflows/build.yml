@@ -45,7 +45,7 @@ jobs:
       shell: bash
       run: |
         ls -ltrah
-        ls -ltrah target/release/
+        ls -ltrah target/**/release/
         tree
 
     - name: Upload
