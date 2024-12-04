@@ -47,7 +47,7 @@ jobs:
             target: "aarch64-unknown-linux-musl"
             os: "linux"
             arch: "aarch64"
-            required_tools: "aarch64-unknown-linux-musl"
+            required_tools: "musl-tools"
             binary_name: "brush"
           # Build for WASI-0.1 target on x86_64/linux host.
           - host: "ubuntu-latest"
